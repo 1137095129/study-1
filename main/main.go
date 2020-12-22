@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
+	"time"
 )
 
 func TestPanic() {
-	defer func(){
+	defer func() {
 		i := recover()
 		fmt.Println(i)
 	}()
@@ -19,26 +21,50 @@ func getEnviron() {
 	for i := range environ {
 		s := environ[i]
 		split := strings.Split(s, "=")
-		fmt.Println(fmt.Sprintf("%s=%s",split[0],split[1]))
+		fmt.Println(fmt.Sprintf("%s=%s", split[0], split[1]))
 	}
 }
 
 type MyTypeSlice []string
 
 func newTypeSlice(strs []string, p *[]string) *MyTypeSlice {
-	*p =strs
+	*p = strs
 	return (*MyTypeSlice)(p)
 }
 
 func (ts *MyTypeSlice) Set(string2 string) error {
-	*ts=MyTypeSlice(strings.Split(string2,","))
+	*ts = MyTypeSlice(strings.Split(string2, ","))
 	return nil
 }
 func (ts *MyTypeSlice) String() string {
 	return ""
 }
 
+func product(strChan chan<- string) {
+	for i := 0; i < 1000; i++ {
+		i := rand.Int()
+		strChan <- fmt.Sprintf("%d", i)
+	}
+}
+func customer(strChan <-chan string) {
+	for true {
+		s := <-strChan
+		fmt.Println(s)
+	}
+}
+
 func main() {
+	strChan := make(chan string)
+	defer close(strChan)
+	//go product(strChan)
+	//go customer(strChan)
+
+	for true {
+		select {
+		case <-time.After(3 * time.Second):
+			fmt.Println("aaa")
+		}
+	}
 	//TestPanic()
 	//arr := study.CreatePersonList(0)
 	//for i := 0; i < 20; i++ {
